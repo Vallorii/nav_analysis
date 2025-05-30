@@ -163,4 +163,14 @@ for date_str in specific_dates:
 # save the dataframe to a csv file (optional - keeping the original save)
 # nav_df.to_csv(r"C:\Users\CB - Vallorii\Vallorii\Vallorii - Vallorii Team\20_Knowledge_Data\40_MarketData\NAV\20250529_235935_COMBINED_ALL_FUNDS_NAV_DISCOUNT_CATEGORISED.csv", index=False)
 
+# --- Report Mean NAV Premium/Discount at 01/05/2025 ---
+print("\nMean NAV Premium/Discount at 01/05/2025:")
+data_at_20250501 = nav_df[nav_df['Date'] == '2025-05-01']
+
+if not data_at_20250501.empty:
+    mean_discount_20250501 = data_at_20250501['Nav Discount Percentage'].mean()
+    print(f"{mean_discount_20250501:.4f}%")
+else:
+    print("No data available for 01/05/2025.")
+
 
