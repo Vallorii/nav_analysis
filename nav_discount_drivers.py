@@ -44,7 +44,7 @@ cpih_df = cpih_df[cpih_df['datetime'] >= start_date]
 uncertainty_df = uncertainty_df[uncertainty_df['datetime'] >= start_date]
 
 # Calculate NAV discount statistics
-nav_df['Nav Discount'] = nav_df['NAV'] / nav_df['Price'] - 1
+nav_df['Nav Discount'] = (nav_df['Price'] / nav_df['NAV']) - 1
 nav_df['Nav Discount Percentage'] = nav_df['Nav Discount'] * 100
 
 # Create monthly date column for all dataframes
