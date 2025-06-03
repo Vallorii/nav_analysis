@@ -227,4 +227,32 @@ if not data_at_20250501.empty:
 else:
     print("No data available for 01/05/2025.")
 
+# --- Report Median NAV Premium/Discount for Specific Dates ---
+print("\nMedian NAV Premium/Discount for All Funds, Infrastructure, and Renewables:")
+
+specific_dates = ['2021-01-01', '2025-01-01']
+
+for date_str in specific_dates:
+    print(f"\nDate: {date_str}")
+    # Filter data for the specific date
+    data_at_date = nav_df[nav_df['Date'] == date_str].copy()
+    
+    if not data_at_date.empty:
+        # Median for all funds combined
+        overall_median = data_at_date['Nav Discount Percentage'].median()
+        print(f"All Funds: {overall_median:.2f}%")
+        
+        # Filter for Infrastructure and Renewables only
+        data_at_date_cat = data_at_date[data_at_date['Category'].isin(['Infrastructure', 'Renewables'])]
+        
+        # Calculate median for each category
+        median_stats = data_at_date_cat.groupby('Category')['Nav Discount Percentage'].median().reset_index()
+        median_stats.columns = ['Category', 'Median NAV Premium/Discount']
+        
+        # Format the output
+        for _, row in median_stats.iterrows():
+            print(f"{row['Category']}: {row['Median NAV Premium/Discount']:.2f}%")
+    else:
+        print("No data available for this date.")
+
 
