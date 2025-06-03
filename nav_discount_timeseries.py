@@ -1,6 +1,7 @@
 import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
+import os
 
 # File paths
 nav_path = r"C:\Users\CB - Vallorii\Vallorii\Vallorii - Vallorii Team\20_Knowledge_Data\40_MarketData\NAV\20250529_235935_COMBINED_ALL_FUNDS.csv"
@@ -77,7 +78,10 @@ plt.xticks(rotation=45)
 plt.tight_layout()
 
 # Set x-axis limits to match data range (remove free space)
-plt.xlim(monthly_stats['Date'].min(), monthly_stats['Date'].max())
+min_date = monthly_stats['Date'].min()
+max_date = monthly_stats['Date'].max()
+if pd.notna(min_date) and pd.notna(max_date):
+    plt.xlim(min_date, max_date)
 
 # Save the time series plot
 plt.savefig(r"C:\Users\CB - Vallorii\Vallorii\Vallorii - Vallorii Team\20_Knowledge_Data\40_MarketData\NAV\nav_premium_discount_timeseries.png")
@@ -116,7 +120,7 @@ for category in categories:
     subset = nav_df_filtered_scatter[nav_df_filtered_scatter['Category'] == category]
     # Use the assigned color from the color_map
     plt.scatter(subset['Date'], subset['Nav Discount Percentage'], 
-                color=color_map[category], alpha=0.4, s=15, label=category) # Changed alpha to 0.95 for very slight transparency
+                color=color_map[category], alpha=0.4, s=15, label=category)
 
 # Add median line to scatter plot (using the overall median)
 plt.plot(monthly_stats['Date'], monthly_stats[('Nav Discount Percentage', 'median')], 
@@ -135,10 +139,63 @@ plt.xticks(rotation=45)
 plt.tight_layout()
 
 # Set x-axis limits to match data range (remove free space)
-plt.xlim(nav_df_filtered_scatter['Date'].min(), nav_df_filtered_scatter['Date'].max())
+min_date = nav_df_filtered_scatter['Date'].min()
+max_date = nav_df_filtered_scatter['Date'].max()
+if pd.notna(min_date) and pd.notna(max_date):
+    plt.xlim(min_date, max_date)
 
 # Save the scatter plot
 plt.savefig(r"C:\Users\CB - Vallorii\Vallorii\Vallorii - Vallorii Team\20_Knowledge_Data\40_MarketData\NAV\nav_premium_discount_scatter_category.png")
+
+plt.show()
+
+# --- New Scatter Plot: Infrastructure vs Renewables --- #
+print('Unique categories before filtering:', nav_df_filtered_scatter['Category'].unique())
+
+plt.figure(figsize=(15, 8))
+
+# Normalize Category to lowercase for consistent filtering
+nav_df_filtered_scatter['Category_lower'] = nav_df_filtered_scatter['Category'].str.lower()
+infra_renew_df = nav_df_filtered_scatter[nav_df_filtered_scatter['Category_lower'].isin(['infrastructure', 'renewables'])].copy()
+
+# Plot scatter points for each category with distinct colors
+plt.scatter(
+    infra_renew_df[infra_renew_df['Category_lower'] == 'infrastructure']['Date'],
+    infra_renew_df[infra_renew_df['Category_lower'] == 'infrastructure']['Nav Discount Percentage'],
+    color='darkorange', alpha=0.4, s=20, label='Infrastructure')
+plt.scatter(
+    infra_renew_df[infra_renew_df['Category_lower'] == 'renewables']['Date'],
+    infra_renew_df[infra_renew_df['Category_lower'] == 'renewables']['Nav Discount Percentage'],
+    color='forestgreen', alpha=0.4, s=20, label='Renewables')
+
+# Calculate monthly medians for each category
+monthly_medians = infra_renew_df.groupby([infra_renew_df['Date'].dt.to_period('M'), 'Category_lower'])['Nav Discount Percentage'].median().reset_index()
+monthly_medians['Date'] = monthly_medians['Date'].dt.to_timestamp()
+
+# Plot median lines for each category with distinct colors
+infra_median = monthly_medians[monthly_medians['Category_lower'] == 'infrastructure']
+renew_median = monthly_medians[monthly_medians['Category_lower'] == 'renewables']
+plt.plot(infra_median['Date'], infra_median['Nav Discount Percentage'], 
+         color='red', linewidth=3, label='Infrastructure Median')
+plt.plot(renew_median['Date'], renew_median['Nav Discount Percentage'], 
+         color='blue', linewidth=3, label='Renewables Median')
+
+plt.xlabel('Date')
+plt.ylabel('NAV Premium / Discount Percentage')
+plt.title('Infrastructure vs Renewables NAV Premium/Discount (2015-2025)')
+plt.legend()
+plt.grid(True, alpha=0.3)
+plt.xticks(rotation=45)
+plt.tight_layout()
+
+# Set x-axis limits to match data range
+min_date = infra_renew_df['Date'].min()
+max_date = infra_renew_df['Date'].max()
+if pd.notna(min_date) and pd.notna(max_date):
+    plt.xlim(min_date, max_date)
+
+# Save the new scatter plot
+plt.savefig(r"C:\Users\CB - Vallorii\Vallorii\Vallorii - Vallorii Team\20_Knowledge_Data\40_MarketData\NAV\nav_premium_discount_infra_vs_renew.png")
 
 plt.show()
 
@@ -159,9 +216,6 @@ for date_str in specific_dates:
         print(subgroup_stats.to_string(index=False))
     else:
         print("No data available for this date.")
-
-# save the dataframe to a csv file (optional - keeping the original save)
-# nav_df.to_csv(r"C:\Users\CB - Vallorii\Vallorii\Vallorii - Vallorii Team\20_Knowledge_Data\40_MarketData\NAV\20250529_235935_COMBINED_ALL_FUNDS_NAV_DISCOUNT_CATEGORISED.csv", index=False)
 
 # --- Report Mean NAV Premium/Discount at 01/05/2025 ---
 print("\nMean NAV Premium/Discount at 01/05/2025:")
