@@ -624,4 +624,3 @@ results_df['Implied Required Rate'] = results_df['Implied Required Rate'].map('{
 print("\nImplied Rate of Return Analysis (April Data, All Funds Combined):")
 print(results_df.to_string(index=False))
 
-
