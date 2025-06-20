@@ -12,6 +12,14 @@ nav_path = r"C:\Users\CB - Vallorii\Vallorii\Vallorii - Vallorii Team\20_Knowled
 category_path = r"C:\Users\CB - Vallorii\Vallorii\Vallorii - Vallorii Team\20_Knowledge_Data\40_MarketData\NAV\AllFunds_categorised.csv"
 market_cap_path = r"..\..\..\..\20_Knowledge_Data\40_MarketData\Infra fund data\Uk_InfraFund_marketcap.xlsx"
 
+# List of funds to hide/omit
+FUNDS_TO_EXCLUDE = [
+    "Digital 9 Infrastructure plc ORD NPV",
+    "HydrogenOne Capital Growth plc ORD GBP0.01",
+    "Aquila Energy Efficiency Trust plc ORD GBP0.01",
+    "BBGI Global Infrastructure S.A. Ord NPV (DI)"
+]
+
 def load_and_process_data():
     """Load and process NAV, category, and market cap data"""
     
@@ -121,58 +129,169 @@ def create_market_cap_weighted_infra_renewables_plot(nav_df_combined):
     market_cap_weighted_discount = weighted_sum / total_market_cap
     market_cap_weighted_discount_df = market_cap_weighted_discount.unstack(level='Category').reset_index()
 
-    # Create the plot using seaborn
+    # Create the plot using seaborn (original style, no extra labels/legend/title)
     fig, ax = plt.subplots(figsize=(15, 8))
-    
-    # Create scatter plots using seaborn
-    sns.scatterplot(data=df[df['Category'] == 'Infrastructure'], 
+    infra_scatter = sns.scatterplot(data=df[df['Category'] == 'Infrastructure'], 
                    x='Date', y='Nav Discount Percentage',
-                   color='darkorange', alpha=0.4, s=20, 
-                   label='Infrastructure (individual)', ax=ax)
-    sns.scatterplot(data=df[df['Category'] == 'Renewables'], 
+                   color='darkorange', alpha=0.6, s=40, 
+                   label='Infrastructure', ax=ax, zorder=3)
+    renew_scatter = sns.scatterplot(data=df[df['Category'] == 'Renewables'], 
                    x='Date', y='Nav Discount Percentage',
-                   color='forestgreen', alpha=0.4, s=20, 
-                   label='Renewables (individual)', ax=ax)
-
-    # Seaborn lineplot for market-cap weighted time series
+                   color='forestgreen', alpha=0.6, s=40, 
+                   label='Renewables', ax=ax, zorder=3)
+    # Market-cap weighted lines (no legend)
     if 'Infrastructure' in market_cap_weighted_discount_df.columns:
         sns.lineplot(
             data=market_cap_weighted_discount_df,
             x='Date', y='Infrastructure',
             color='darkorange', linewidth=3, 
-            label='Infrastructure (Market-Cap Weighted)', ax=ax
+            legend=False, ax=ax, zorder=2
         )
     if 'Renewables' in market_cap_weighted_discount_df.columns:
         sns.lineplot(
             data=market_cap_weighted_discount_df,
             x='Date', y='Renewables',
             color='forestgreen', linewidth=3, 
-            label='Renewables (Market-Cap Weighted)', ax=ax
+            legend=False, ax=ax, zorder=2
         )
-
-    # Add horizontal line
-    ax.axhline(y=0, color='black', linestyle='-', alpha=0.5)
-    
-    # Set labels and title
-    ax.legend()
+    ax.axhline(y=0, color='black', linestyle='-', alpha=0.5, zorder=1)
     ax.grid(True, alpha=0.3)
     ax.tick_params(axis='x')
-    
-    # Adjust layout
     plt.tight_layout()
-    
-    # Set x-axis limits
     min_date = df['Date'].min()
     max_date = df['Date'].max()
     if pd.notna(min_date) and pd.notna(max_date):
         ax.set_xlim(min_date, max_date)
-    
-    # Save the plot
+    ax.set_xlabel(" ")
+    ax.set_ylabel(" ")
+    handles, labels = ax.get_legend_handles_labels()
+    # Only keep the first two (scatter) handles
+    ax.legend(handles[:2], labels[:2], loc='upper right', frameon=True, facecolor='white', framealpha=0.7)
     output_path = "Market_Cap_Weighted_NAV_Premium_Discount_Infra_vs_Renewables-final.png"
     plt.savefig(output_path, dpi=300, bbox_inches='tight')
     plt.close()
     print(f"Plot saved as: {output_path}")
     return market_cap_weighted_discount_df
+
+def create_market_cap_weighted_infra_renewables_plot_hide_scatter(nav_df_combined):
+    print("[A] Hiding scatter for specified funds, but including them in calculations...")
+    df = nav_df_combined[nav_df_combined['Category'].isin(['Infrastructure', 'Renewables'])].copy()
+    scatter_df = df[~df['Fund Name'].isin(FUNDS_TO_EXCLUDE)]
+    weighted_sum = (df['Nav Discount Percentage'] * df['Market Cap']).groupby([df['Date'], df['Category']]).sum()
+    total_market_cap = df.groupby([df['Date'], df['Category']])['Market Cap'].sum()
+    market_cap_weighted_discount = weighted_sum / total_market_cap
+    market_cap_weighted_discount_df = market_cap_weighted_discount.unstack(level='Category').reset_index()
+    # Use the original plotting code (no extra labels/legend/title)
+    fig, ax = plt.subplots(figsize=(15, 8))
+    infra_scatter = sns.scatterplot(data=scatter_df[scatter_df['Category'] == 'Infrastructure'], 
+                   x='Date', y='Nav Discount Percentage',
+                   color='darkorange', alpha=0.6, s=40, 
+                   label='Infrastructure', ax=ax, zorder=3)
+    renew_scatter = sns.scatterplot(data=scatter_df[scatter_df['Category'] == 'Renewables'], 
+                   x='Date', y='Nav Discount Percentage',
+                   color='forestgreen', alpha=0.6, s=40, 
+                   label='Renewables', ax=ax, zorder=3)
+    if 'Infrastructure' in market_cap_weighted_discount_df.columns:
+        sns.lineplot(
+            data=market_cap_weighted_discount_df,
+            x='Date', y='Infrastructure',
+            color='darkorange', linewidth=3, 
+            legend=False, ax=ax, zorder=2
+        )
+    if 'Renewables' in market_cap_weighted_discount_df.columns:
+        sns.lineplot(
+            data=market_cap_weighted_discount_df,
+            x='Date', y='Renewables',
+            color='forestgreen', linewidth=3, 
+            legend=False, ax=ax, zorder=2
+        )
+    ax.axhline(y=0, color='black', linestyle='-', alpha=0.5, zorder=1)
+    ax.grid(True, alpha=0.3)
+    ax.tick_params(axis='x')
+    plt.tight_layout()
+    min_date = df['Date'].min()
+    max_date = df['Date'].max()
+    if pd.notna(min_date) and pd.notna(max_date):
+        ax.set_xlim(min_date, max_date)
+    ax.set_xlabel(" ")
+    ax.set_ylabel(" ")
+    handles, labels = ax.get_legend_handles_labels()
+    ax.legend(handles[:2], labels[:2], loc='upper right', frameon=True, facecolor='white', framealpha=0.7)
+    output_path = "Market_Cap_Weighted_NAV_Premium_Discount_Infra_vs_Renewables-hide_scatter.png"
+    plt.savefig(output_path, dpi=300, bbox_inches='tight')
+    plt.close()
+    print(f"[A] Plot saved as: {output_path}")
+    # Only report May 2025 median
+    may_2025 = (df['Date'].dt.year == 2025) & (df['Date'].dt.month == 5)
+    may_2025_df = df[may_2025]
+    if not may_2025_df.empty:
+        may_2025_medians = may_2025_df.groupby('Category')['Nav Discount Percentage'].median()
+        print("[A] Median NAV Discount Percentage by Category in May 2025:")
+        print(may_2025_medians)
+    else:
+        print("[A] No data for May 2025.")
+    return None
+
+def create_market_cap_weighted_infra_renewables_plot_omit_funds(nav_df_combined):
+    print("[B] Omitting specified funds from all calculations and scatter...")
+    df = nav_df_combined[
+        nav_df_combined['Category'].isin(['Infrastructure', 'Renewables']) &
+        (~nav_df_combined['Fund Name'].isin(FUNDS_TO_EXCLUDE))
+    ].copy()
+    weighted_sum = (df['Nav Discount Percentage'] * df['Market Cap']).groupby([df['Date'], df['Category']]).sum()
+    total_market_cap = df.groupby([df['Date'], df['Category']])['Market Cap'].sum()
+    market_cap_weighted_discount = weighted_sum / total_market_cap
+    market_cap_weighted_discount_df = market_cap_weighted_discount.unstack(level='Category').reset_index()
+    # Use the original plotting code (no extra labels/legend/title)
+    fig, ax = plt.subplots(figsize=(15, 8))
+    infra_scatter = sns.scatterplot(data=df[df['Category'] == 'Infrastructure'], 
+                   x='Date', y='Nav Discount Percentage',
+                   color='darkorange', alpha=0.6, s=40, 
+                   label='Infrastructure', ax=ax, zorder=3)
+    renew_scatter = sns.scatterplot(data=df[df['Category'] == 'Renewables'], 
+                   x='Date', y='Nav Discount Percentage',
+                   color='forestgreen', alpha=0.6, s=40, 
+                   label='Renewables', ax=ax, zorder=3)
+    if 'Infrastructure' in market_cap_weighted_discount_df.columns:
+        sns.lineplot(
+            data=market_cap_weighted_discount_df,
+            x='Date', y='Infrastructure',
+            color='darkorange', linewidth=3, 
+            legend=False, ax=ax, zorder=2
+        )
+    if 'Renewables' in market_cap_weighted_discount_df.columns:
+        sns.lineplot(
+            data=market_cap_weighted_discount_df,
+            x='Date', y='Renewables',
+            color='forestgreen', linewidth=3, 
+            legend=False, ax=ax, zorder=2
+        )
+    ax.axhline(y=0, color='black', linestyle='-', alpha=0.5, zorder=1)
+    ax.grid(True, alpha=0.3)
+    ax.tick_params(axis='x')
+    plt.tight_layout()
+    min_date = df['Date'].min()
+    max_date = df['Date'].max()
+    if pd.notna(min_date) and pd.notna(max_date):
+        ax.set_xlim(min_date, max_date)
+    ax.set_xlabel(" ")
+    ax.set_ylabel(" ")
+    handles, labels = ax.get_legend_handles_labels()
+    ax.legend(handles[:2], labels[:2], loc='upper right', frameon=True, facecolor='white', framealpha=0.7)
+    output_path = "Market_Cap_Weighted_NAV_Premium_Discount_Infra_vs_Renewables-omit_funds.png"
+    plt.savefig(output_path, dpi=300, bbox_inches='tight')
+    plt.close()
+    print(f"[B] Plot saved as: {output_path}")
+    # Only report May 2025 median
+    may_2025 = (df['Date'].dt.year == 2025) & (df['Date'].dt.month == 5)
+    may_2025_df = df[may_2025]
+    if not may_2025_df.empty:
+        may_2025_medians = may_2025_df.groupby('Category')['Nav Discount Percentage'].median()
+        print("[B] Median NAV Discount Percentage by Category in May 2025:")
+        print(may_2025_medians)
+    else:
+        print("[B] No data for May 2025.")
+    return None
 
 def main():
     """Main function to execute the analysis"""
@@ -184,7 +303,11 @@ def main():
         create_market_cap_weighted_infra_renewables_plot(nav_df_combined)
         
         print("Analysis complete!")
-        
+        # New plots for A and B
+        print("\n---\nGenerating plot A (hide scatter for specified funds)...")
+        create_market_cap_weighted_infra_renewables_plot_hide_scatter(nav_df_combined)
+        print("\n---\nGenerating plot B (omit specified funds from all calculations)...")
+        create_market_cap_weighted_infra_renewables_plot_omit_funds(nav_df_combined)
     except Exception as e:
         print(f"Error occurred: {str(e)}")
         import traceback

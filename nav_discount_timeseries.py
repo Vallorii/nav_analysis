@@ -624,3 +624,44 @@ results_df['Implied Required Rate'] = results_df['Implied Required Rate'].map('{
 print("\nImplied Rate of Return Analysis (April Data, All Funds Combined):")
 print(results_df.to_string(index=False))
 
+# --- Output Monthly NAV Discount Statistics to CSV ---
+
+# 1. Median NAV Discount for all funds (already in monthly_stats)
+# Flatten columns after groupby aggregation
+monthly_stats.columns = ['Date', 'Median NAV Discount (All Funds)', 'Q1', 'Q3', 'P10', 'P90']
+monthly_median_all = monthly_stats[['Date', 'Median NAV Discount (All Funds)']].copy()
+
+# 2. Median NAV Discount for renewables and infrastructure
+nav_df_combined['Month'] = nav_df_combined['Date'].dt.to_period('M')
+monthly_median_cat = nav_df_combined[nav_df_combined['Category'].isin(['Renewables', 'Infrastructure'])]
+monthly_median_cat = monthly_median_cat.groupby(['Month', 'Category'])['Nav Discount Percentage'].median().unstack()
+monthly_median_cat = monthly_median_cat.rename(columns={
+    'Renewables': 'Median NAV Discount (Renewables)',
+    'Infrastructure': 'Median NAV Discount (Infrastructure)'
+})
+monthly_median_cat.index = monthly_median_cat.index.to_timestamp()
+
+# 3. Market-cap weighted NAV Discount for all funds
+market_cap_weighted_discount_df = market_cap_weighted_discount_df.copy()
+market_cap_weighted_discount_df.rename(columns={'Weighted NAV Discount Percentage': 'Market-Cap Weighted NAV Discount (All Funds)'}, inplace=True)
+
+# 4. Market-cap weighted NAV Discount for renewables and infrastructure
+market_cap_weighted_discount_df_cat = market_cap_weighted_discount_df_cat.rename(columns={
+    'Infrastructure': 'Market-Cap Weighted NAV Discount (Infrastructure)',
+    'Renewables': 'Market-Cap Weighted NAV Discount (Renewables)'
+})
+
+# 5. Merge all into a single DataFrame on Date
+monthly_stats_df = monthly_median_all.set_index('Date')
+monthly_stats_df = monthly_stats_df.join(monthly_median_cat)
+monthly_stats_df = monthly_stats_df.join(market_cap_weighted_discount_df.set_index('Date'))
+monthly_stats_df = monthly_stats_df.join(market_cap_weighted_discount_df_cat.set_index('Date'))
+monthly_stats_df = monthly_stats_df.reset_index()
+
+# 6. Sort by Date
+monthly_stats_df = monthly_stats_df.sort_values('Date')
+
+# 7. Save to CSV in workspace root
+monthly_stats_df.to_csv('monthly_nav_discount_stats.csv', index=False)
+print('Monthly NAV discount statistics saved to monthly_nav_discount_stats.csv')
+
