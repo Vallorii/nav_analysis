@@ -228,6 +228,9 @@ def create_market_cap_weighted_infra_renewables_plot_hide_scatter(nav_df_combine
         may_2025_medians = may_2025_df.groupby('Category')['Nav Discount Percentage'].median()
         print("[A] Median NAV Discount Percentage by Category in May 2025:")
         print(may_2025_medians)
+        # Also report May 2025 median for all funds combined
+        may_2025_overall_median = may_2025_df['Nav Discount Percentage'].median()
+        print(f"[A] May 2025 Median NAV Discount Percentage (All Funds Combined): {may_2025_overall_median}")
     else:
         print("[A] No data for May 2025.")
     return None
@@ -289,9 +292,31 @@ def create_market_cap_weighted_infra_renewables_plot_omit_funds(nav_df_combined)
         may_2025_medians = may_2025_df.groupby('Category')['Nav Discount Percentage'].median()
         print("[B] Median NAV Discount Percentage by Category in May 2025:")
         print(may_2025_medians)
+        # Also report May 2025 median for all funds combined
+        may_2025_overall_median = may_2025_df['Nav Discount Percentage'].median()
+        print(f"[B] May 2025 Median NAV Discount Percentage (All Funds Combined): {may_2025_overall_median}")
     else:
         print("[B] No data for May 2025.")
     return None
+
+def save_monthly_nav_discount_B(nav_df_combined):
+    # Filter for B (omit specified funds)
+    df = nav_df_combined[
+        nav_df_combined['Category'].isin(['Infrastructure', 'Renewables']) &
+        (~nav_df_combined['Fund Name'].isin(FUNDS_TO_EXCLUDE))
+    ].copy()
+    df['Month'] = df['Date'].dt.to_period('M')
+    # All funds combined
+    all_funds = df.groupby('Month')['Nav Discount Percentage'].median().rename('All Funds')
+    # Infrastructure only
+    infra = df[df['Category'] == 'Infrastructure'].groupby('Month')['Nav Discount Percentage'].median().rename('Infrastructure')
+    # Renewables only
+    renew = df[df['Category'] == 'Renewables'].groupby('Month')['Nav Discount Percentage'].median().rename('Renewables')
+    # Combine into one DataFrame
+    result = pd.concat([all_funds, infra, renew], axis=1)
+    result.index = result.index.to_timestamp()
+    result.to_csv('monthly_nav_discount_B.csv', index_label='Month')
+    print('Saved monthly NAV discount table for version B as monthly_nav_discount_B.csv')
 
 def main():
     """Main function to execute the analysis"""
@@ -308,6 +333,8 @@ def main():
         create_market_cap_weighted_infra_renewables_plot_hide_scatter(nav_df_combined)
         print("\n---\nGenerating plot B (omit specified funds from all calculations)...")
         create_market_cap_weighted_infra_renewables_plot_omit_funds(nav_df_combined)
+        # Save monthly NAV discount table for version B
+        save_monthly_nav_discount_B(nav_df_combined)
     except Exception as e:
         print(f"Error occurred: {str(e)}")
         import traceback
