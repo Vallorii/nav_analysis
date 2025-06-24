@@ -6,7 +6,7 @@ import matplotlib.dates as mdates
 # --- File paths (update if needed) ---
 nav_path = r"C:\Users\CB - Vallorii\Vallorii\Vallorii - Vallorii Team\20_Knowledge_Data\40_MarketData\NAV\20250529_235935_COMBINED_ALL_FUNDS.csv"
 category_path = r"C:\Users\CB - Vallorii\Vallorii\Vallorii - Vallorii Team\20_Knowledge_Data\40_MarketData\NAV\AllFunds_categorised.csv"
-discount_rate_path = r"C:\Users\CB - Vallorii\Vallorii\Vallorii - Vallorii Team\20_Knowledge_Data\40_MarketData\NAV\NAV data excluding extremes\250623_discount-rates_no-extremes.xlsx"
+discount_rate_path = r"C:\Users\CB - Vallorii\Vallorii\Vallorii - Vallorii Team\20_Knowledge_Data\40_MarketData\NAV\NAV data excluding extremes\250623_discount-rates_nav-discounts.xlsx"
 rf_path = r"C:\Users\CB - Vallorii\Vallorii\Vallorii - Vallorii Team\20_Knowledge_Data\40_MarketData\boe_yields_data.csv"
 
 # --- Funds to exclude for version B ---
@@ -28,6 +28,9 @@ nav_df = nav_df[
     nav_df['Category'].isin(['Infrastructure', 'Renewables']) &
     (~nav_df['Fund Name'].isin(FUNDS_TO_EXCLUDE))
 ].copy()
+# Save filtered nav_df as CSV
+nav_df.to_csv('nav_df_B.csv', index=False)
+print('Saved filtered nav_df as nav_df_B.csv')
 
 # --- Calculate NAV Discount Percentage ---
 nav_df['Nav Discount'] = (nav_df['Price'] / nav_df['NAV']) - 1
@@ -181,6 +184,10 @@ def get_closest_market_cap(row):
             return ticker_data.loc[min_diff_idx, 'Market Cap']
     return row['Market Cap']
 nav_df['Market Cap'] = nav_df.apply(get_closest_market_cap, axis=1)
+
+# Save nav_df with market cap as CSV
+nav_df.to_csv('nav_df_with_marketcap.csv', index=False)
+print('Saved nav_df with market cap as nav_df_with_marketcap.csv')
 
 # --- Market cap weighted NAV discount for each month and group ---
 def weighted_nav_discount(subdf):
@@ -352,4 +359,8 @@ weighted_cols = [
 ]
 weighted_df = monthly[weighted_cols].copy()
 weighted_df.to_csv('implied_equity_risk_premium_weighted_B.csv', index=False)
-print('Saved market cap weighted implied equity risk premium table as implied_equity_risk_premium_weighted_B.csv') 
+print('Saved market cap weighted implied equity risk premium table as implied_equity_risk_premium_weighted_B.csv')
+
+# --- Save full monthly DataFrame to CSV (including market cap weighted columns) ---
+monthly.to_csv('implied_equity_risk_premium_full_B.csv', index=False)
+print('Saved full implied equity risk premium table as implied_equity_risk_premium_full_B.csv') 
