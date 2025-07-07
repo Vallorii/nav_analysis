@@ -86,6 +86,10 @@ for group, col in [
 mask = (monthly['Date'] >= '2015-05-01') & (monthly['Date'] <= '2025-05-01')
 monthly = monthly.loc[mask].copy()
 
+# --- Save intermediate monthly DataFrame to CSV for further analysis ---
+monthly.to_csv('monthly_intermediate.csv', index=False)
+print('Saved intermediate monthly DataFrame as monthly_intermediate.csv')
+
 # --- Save to CSV ---
 monthly.to_csv('implied_equity_risk_premium_B.csv', index=False)
 print('Saved implied equity risk premium table as implied_equity_risk_premium_B.csv')
