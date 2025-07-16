@@ -2,6 +2,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
 import os
+import datetime
 
 # File paths
 nav_path = r"C:\Users\CB - Vallorii\Vallorii\Vallorii - Vallorii Team\20_Knowledge_Data\40_MarketData\NAV\20250529_235935_COMBINED_ALL_FUNDS.csv"
@@ -116,7 +117,8 @@ nav_df_combined['Nav Discount Percentage'] = nav_df_combined['Nav Discount'] * 1
 # print(nav_df_combined.head())
 
 # Save the combined dataframe to a new csv file
-output_combined_path = r"C:\Users\CB - Vallorii\Vallorii\Vallorii - Vallorii Team\20_Knowledge_Data\40_MarketData\NAV\COMBINED_NAV_CATEGORY_MARKETCAP.csv"
+timestamp = datetime.datetime.now().strftime('%Y%m%d_%H%M%S')
+output_combined_path = os.path.join('..', 'output', 'data', f'COMBINED_NAV_CATEGORY_MARKETCAP_{timestamp}.csv')
 nav_df_combined.to_csv(output_combined_path, index=False)
 
 # Create monthly aggregation with quartiles and percentiles (still needed for time series plot)
@@ -454,7 +456,8 @@ if pd.notna(min_date) and pd.notna(max_date):
     plt.xlim(min_date, max_date)
 
 # Save the plot
-output_weighted_plot_path = r"C:\Users\CB - Vallorii\Vallorii\Vallorii - Vallorii Team\20_Knowledge_Data\40_MarketData\NAV\nav_premium_discount_marketcap_weighted.png"
+timestamp = datetime.datetime.now().strftime('%Y%m%d_%H%M%S')
+output_weighted_plot_path = os.path.join('..', 'output', 'charts', f'nav_premium_discount_marketcap_weighted_{timestamp}.png')
 plt.savefig(output_weighted_plot_path, dpi=300, bbox_inches='tight')
 plt.close()
 
@@ -531,7 +534,8 @@ if pd.notna(min_date) and pd.notna(max_date):
     plt.xlim(min_date, max_date)
 
 # Save the plot
-output_weighted_infra_renew_plot_path = r"C:\Users\CB - Vallorii\Vallorii\Vallorii - Vallorii Team\20_Knowledge_Data\40_MarketData\NAV\nav_premium_discount_marketcap_weighted_infra_renew.png"
+timestamp = datetime.datetime.now().strftime('%Y%m%d_%H%M%S')
+output_weighted_infra_renew_plot_path = os.path.join('..', 'output', 'charts', f'nav_premium_discount_marketcap_weighted_infra_renew_{timestamp}.png')
 plt.savefig(output_weighted_infra_renew_plot_path, dpi=300, bbox_inches='tight')
 plt.close()
 
@@ -662,6 +666,7 @@ monthly_stats_df = monthly_stats_df.reset_index()
 monthly_stats_df = monthly_stats_df.sort_values('Date')
 
 # 7. Save to CSV in workspace root
-monthly_stats_df.to_csv('monthly_nav_discount_stats.csv', index=False)
-print('Monthly NAV discount statistics saved to monthly_nav_discount_stats.csv')
+timestamp = datetime.datetime.now().strftime('%Y%m%d_%H%M%S')
+monthly_stats_df.to_csv(os.path.join('..', 'output', 'data', f'monthly_nav_discount_stats_{timestamp}.csv'), index=False)
+print('Monthly NAV discount statistics saved to output/data/monthly_nav_discount_stats.csv')
 

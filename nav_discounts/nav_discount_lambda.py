@@ -3,6 +3,7 @@ import numpy as np
 from datetime import datetime, timedelta
 import matplotlib.pyplot as plt
 import seaborn as sns
+import os
 
 # Constants (using constant equity disc rate for now)
 LEVERED_EQUITY_DISCOUNT_RATE = 0.095  # 9.5%
@@ -154,10 +155,14 @@ def main():
         suffixes=('_Point', '_Rolling')
     )
     
+    # Ensure output directories exist
+    timestamp = datetime.datetime.now().strftime('%Y%m%d_%H%M%S')
+    os.makedirs(os.path.join('..', 'output', 'data'), exist_ok=True)
+    os.makedirs(os.path.join('..', 'output', 'charts'), exist_ok=True)
     # Save all results to CSV
-    point_in_time_df.to_csv('lambda_point_in_time_results.csv', index=False)
-    rolling_df.to_csv('lambda_rolling_3y_results.csv', index=False)
-    comprehensive_df.to_csv('lambda_comprehensive_results.csv', index=False)
+    point_in_time_df.to_csv(os.path.join('..', 'output', 'data', f'lambda_point_in_time_results_{timestamp}.csv'), index=False)
+    rolling_df.to_csv(os.path.join('..', 'output', 'data', f'lambda_rolling_3y_results_{timestamp}.csv'), index=False)
+    comprehensive_df.to_csv(os.path.join('..', 'output', 'data', f'lambda_comprehensive_results_{timestamp}.csv'), index=False)
     
     # --- Visualizations ---
     # 1. Point-in-Time Analysis
@@ -186,7 +191,7 @@ def main():
     ax2.yaxis.set_major_formatter(plt.FuncFormatter(lambda y, _: '{:.2f}'.format(y)))
     
     plt.tight_layout()
-    plt.savefig('lambda_point_in_time.png', dpi=300, bbox_inches='tight')
+    plt.savefig(os.path.join('..', 'output', 'charts', f'lambda_point_in_time_{timestamp}.png'), dpi=300, bbox_inches='tight')
     plt.close()
     
     # 2. 3-Year Rolling Analysis
@@ -201,7 +206,7 @@ def main():
     plt.ylim(0.06, 0.09)  # Adjust range as needed
     plt.gca().yaxis.set_major_formatter(plt.FuncFormatter(lambda y, _: '{:.2%}'.format(y)))
     plt.tight_layout()
-    plt.savefig('lambda_rolling_3y.png', dpi=300, bbox_inches='tight')
+    plt.savefig(os.path.join('..', 'output', 'charts', f'lambda_rolling_3y_{timestamp}.png'), dpi=300, bbox_inches='tight')
     plt.close()
     
     # 3. Risk-Free Rate and Implied Required Rate Time Series
@@ -220,7 +225,7 @@ def main():
     plt.ylim(0, 0.15)  # Adjust range as needed
     plt.gca().yaxis.set_major_formatter(plt.FuncFormatter(lambda y, _: '{:.2%}'.format(y)))
     plt.tight_layout()
-    plt.savefig('rates_time_series.png', dpi=300, bbox_inches='tight')
+    plt.savefig(os.path.join('..', 'output', 'charts', f'rates_time_series_{timestamp}.png'), dpi=300, bbox_inches='tight')
     plt.close()
     
     # Print specific comparisons

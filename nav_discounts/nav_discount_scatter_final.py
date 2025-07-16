@@ -3,14 +3,16 @@ import numpy as np
 import seaborn as sns
 import matplotlib.pyplot as plt
 from viz_config import set_viz_style
+import os
+import datetime
 
 # Set the visualization style from viz_config.py
 set_viz_style()
 
 # File paths
-nav_path = r"C:\Users\CB - Vallorii\Vallorii\Vallorii - Vallorii Team\20_Knowledge_Data\40_MarketData\NAV\20250529_235935_COMBINED_ALL_FUNDS.csv"
+nav_path = r"C:\Users\CB - Vallorii\Vallorii\Vallorii - Vallorii Team\20_Knowledge_Data\40_MarketData\NAV\20250716_fund_NAV_data.csv"
 category_path = r"C:\Users\CB - Vallorii\Vallorii\Vallorii - Vallorii Team\20_Knowledge_Data\40_MarketData\NAV\AllFunds_categorised.csv"
-market_cap_path = r"..\..\..\..\20_Knowledge_Data\40_MarketData\Infra fund data\Uk_InfraFund_marketcap.xlsx"
+market_cap_path = r"C:\Users\CB - Vallorii\Vallorii\Vallorii - Vallorii Team\20_Knowledge_Data\40_MarketData\Infra fund data\20250716_Uk_InfraFund_marketcap.xlsx"
 
 # List of funds to hide/omit
 FUNDS_TO_EXCLUDE = [
@@ -20,6 +22,10 @@ FUNDS_TO_EXCLUDE = [
     "BBGI Global Infrastructure S.A. Ord NPV (DI)"
 ]
 
+# Output directories (absolute paths)
+CHARTS_DIR = r"C:\Users\CB - Vallorii\Vallorii\Vallorii - Vallorii Team\10_BusinessVerticals\10_Research\06_Analysis\Nav discounts\output\charts"
+DATA_DIR = r"C:\Users\CB - Vallorii\Vallorii\Vallorii - Vallorii Team\10_BusinessVerticals\10_Research\06_Analysis\Nav discounts\output\data"
+
 def load_and_process_data():
     """Load and process NAV, category, and market cap data"""
     
@@ -27,15 +33,23 @@ def load_and_process_data():
     # Load NAV data
     nav_df = pd.read_csv(nav_path)
     print(f"Loaded {len(nav_df)} NAV records")
+    print("NAV columns:", nav_df.columns.tolist())
+    print(nav_df.head())
     
-    print("Loading category data...")
-    # Load category data
-    category_df = pd.read_csv(category_path)
-    print(f"Loaded {len(category_df)} category records")
-    
-    # Merge NAV data with category data
-    nav_df = pd.merge(nav_df, category_df[['Fund Name', 'Category']], on='Fund Name', how='left')
-    print(f"After merge: {len(nav_df)} records")
+    if 'Category' in nav_df.columns:
+        print("'Category' column found in NAV data. Skipping merge with category file.")
+    else:
+        print("Loading category data...")
+        # Load category data
+        category_df = pd.read_csv(category_path)
+        print(f"Loaded {len(category_df)} category records")
+        print("Category columns:", category_df.columns.tolist())
+        print(category_df.head())
+        # Merge NAV data with category data
+        nav_df = pd.merge(nav_df, category_df[['Fund Name', 'Category']], on='Fund Name', how='left')
+        print(f"After merge: {len(nav_df)} records")
+        print("Merged DataFrame columns:", nav_df.columns.tolist())
+        print(nav_df.head())
     
     print("Loading market cap data...")
     # Process market cap data
@@ -167,73 +181,15 @@ def create_market_cap_weighted_infra_renewables_plot(nav_df_combined):
     handles, labels = ax.get_legend_handles_labels()
     # Only keep the first two (scatter) handles
     ax.legend(handles[:2], labels[:2], loc='upper right', frameon=True, facecolor='white', framealpha=0.7)
-    output_path = "Market_Cap_Weighted_NAV_Premium_Discount_Infra_vs_Renewables-final.png"
+    timestamp = datetime.datetime.now().strftime('%Y%m%d_%H%M%S')
+    output_path = os.path.join(CHARTS_DIR, f"{timestamp}_Market_Cap_Weighted_NAV_Premium_Discount_Infra_vs_Renewables-final.png")
     plt.savefig(output_path, dpi=300, bbox_inches='tight')
     plt.close()
     print(f"Plot saved as: {output_path}")
     return market_cap_weighted_discount_df
 
 def create_market_cap_weighted_infra_renewables_plot_hide_scatter(nav_df_combined):
-    print("[A] Hiding scatter for specified funds, but including them in calculations...")
-    df = nav_df_combined[nav_df_combined['Category'].isin(['Infrastructure', 'Renewables'])].copy()
-    scatter_df = df[~df['Fund Name'].isin(FUNDS_TO_EXCLUDE)]
-    weighted_sum = (df['Nav Discount Percentage'] * df['Market Cap']).groupby([df['Date'], df['Category']]).sum()
-    total_market_cap = df.groupby([df['Date'], df['Category']])['Market Cap'].sum()
-    market_cap_weighted_discount = weighted_sum / total_market_cap
-    market_cap_weighted_discount_df = market_cap_weighted_discount.unstack(level='Category').reset_index()
-    # Use the original plotting code (no extra labels/legend/title)
-    fig, ax = plt.subplots(figsize=(15, 8))
-    infra_scatter = sns.scatterplot(data=scatter_df[scatter_df['Category'] == 'Infrastructure'], 
-                   x='Date', y='Nav Discount Percentage',
-                   color='darkorange', alpha=0.6, s=40, 
-                   label='Infrastructure', ax=ax, zorder=3)
-    renew_scatter = sns.scatterplot(data=scatter_df[scatter_df['Category'] == 'Renewables'], 
-                   x='Date', y='Nav Discount Percentage',
-                   color='forestgreen', alpha=0.6, s=40, 
-                   label='Renewables', ax=ax, zorder=3)
-    if 'Infrastructure' in market_cap_weighted_discount_df.columns:
-        sns.lineplot(
-            data=market_cap_weighted_discount_df,
-            x='Date', y='Infrastructure',
-            color='darkorange', linewidth=3, 
-            legend=False, ax=ax, zorder=2
-        )
-    if 'Renewables' in market_cap_weighted_discount_df.columns:
-        sns.lineplot(
-            data=market_cap_weighted_discount_df,
-            x='Date', y='Renewables',
-            color='forestgreen', linewidth=3, 
-            legend=False, ax=ax, zorder=2
-        )
-    ax.axhline(y=0, color='black', linestyle='-', alpha=0.5, zorder=1)
-    ax.grid(True, alpha=0.3)
-    ax.tick_params(axis='x')
-    plt.tight_layout()
-    min_date = df['Date'].min()
-    max_date = df['Date'].max()
-    if pd.notna(min_date) and pd.notna(max_date):
-        ax.set_xlim(min_date, max_date)
-    ax.set_xlabel(" ")
-    ax.set_ylabel(" ")
-    handles, labels = ax.get_legend_handles_labels()
-    ax.legend(handles[:2], labels[:2], loc='upper right', frameon=True, facecolor='white', framealpha=0.7)
-    output_path = "Market_Cap_Weighted_NAV_Premium_Discount_Infra_vs_Renewables-hide_scatter.png"
-    plt.savefig(output_path, dpi=300, bbox_inches='tight')
-    plt.close()
-    print(f"[A] Plot saved as: {output_path}")
-    # Only report May 2025 median
-    may_2025 = (df['Date'].dt.year == 2025) & (df['Date'].dt.month == 5)
-    may_2025_df = df[may_2025]
-    if not may_2025_df.empty:
-        may_2025_medians = may_2025_df.groupby('Category')['Nav Discount Percentage'].median()
-        print("[A] Median NAV Discount Percentage by Category in May 2025:")
-        print(may_2025_medians)
-        # Also report May 2025 median for all funds combined
-        may_2025_overall_median = may_2025_df['Nav Discount Percentage'].median()
-        print(f"[A] May 2025 Median NAV Discount Percentage (All Funds Combined): {may_2025_overall_median}")
-    else:
-        print("[A] No data for May 2025.")
-    return None
+    pass  # Function removed as per new requirements
 
 def create_market_cap_weighted_infra_renewables_plot_omit_funds(nav_df_combined):
     print("[B] Omitting specified funds from all calculations and scatter...")
@@ -281,7 +237,8 @@ def create_market_cap_weighted_infra_renewables_plot_omit_funds(nav_df_combined)
     ax.set_ylabel(" ")
     handles, labels = ax.get_legend_handles_labels()
     ax.legend(handles[:2], labels[:2], loc='upper right', frameon=True, facecolor='white', framealpha=0.7)
-    output_path = "Market_Cap_Weighted_NAV_Premium_Discount_Infra_vs_Renewables-omit_funds.png"
+    timestamp = datetime.datetime.now().strftime('%Y%m%d_%H%M%S')
+    output_path = os.path.join(CHARTS_DIR, f"{timestamp}_Market_Cap_Weighted_NAV_Premium_Discount_Infra_vs_Renewables-omit_funds.png")
     plt.savefig(output_path, dpi=300, bbox_inches='tight')
     plt.close()
     print(f"[B] Plot saved as: {output_path}")
@@ -315,7 +272,8 @@ def save_monthly_nav_discount_B(nav_df_combined):
     # Combine into one DataFrame
     result = pd.concat([all_funds, infra, renew], axis=1)
     result.index = result.index.to_timestamp()
-    result.to_csv('monthly_nav_discount_B.csv', index_label='Month')
+    timestamp = datetime.datetime.now().strftime('%Y%m%d_%H%M%S')
+    result.to_csv(os.path.join(DATA_DIR, f'{timestamp}_monthly_nav_discount_B.csv'), index_label='Month')
     print('Saved monthly NAV discount table for version B as monthly_nav_discount_B.csv')
 
 def main():
@@ -327,18 +285,32 @@ def main():
         print("Creating Market-Cap Weighted NAV Premium/Discount Time Series: Infrastructure vs Renewables plot...")
         create_market_cap_weighted_infra_renewables_plot(nav_df_combined)
         
-        print("Analysis complete!")
-        # New plots for A and B
-        print("\n---\nGenerating plot A (hide scatter for specified funds)...")
-        create_market_cap_weighted_infra_renewables_plot_hide_scatter(nav_df_combined)
         print("\n---\nGenerating plot B (omit specified funds from all calculations)...")
         create_market_cap_weighted_infra_renewables_plot_omit_funds(nav_df_combined)
         # Save monthly NAV discount table for version B
         save_monthly_nav_discount_B(nav_df_combined)
+        # Print July 2025 median NAV discount
+        df = nav_df_combined[
+            nav_df_combined['Category'].isin(['Infrastructure', 'Renewables']) &
+            (~nav_df_combined['Fund Name'].isin(FUNDS_TO_EXCLUDE))
+        ].copy()
+        july_2025 = (df['Date'].dt.year == 2025) & (df['Date'].dt.month == 7)
+        july_2025_df = df[july_2025]
+        if not july_2025_df.empty:
+            july_2025_medians = july_2025_df.groupby('Category')['Nav Discount Percentage'].median()
+            print("[B] Median NAV Discount Percentage by Category in July 2025:")
+            print(july_2025_medians)
+            july_2025_overall_median = july_2025_df['Nav Discount Percentage'].median()
+            print(f"[B] July 2025 Median NAV Discount Percentage (All Funds Combined): {july_2025_overall_median}")
+        else:
+            print("[B] No data for July 2025.")
+        print("Analysis complete!")
     except Exception as e:
         print(f"Error occurred: {str(e)}")
         import traceback
         traceback.print_exc()
 
 if __name__ == "__main__":
+    os.makedirs(DATA_DIR, exist_ok=True)
+    os.makedirs(CHARTS_DIR, exist_ok=True)
     main()

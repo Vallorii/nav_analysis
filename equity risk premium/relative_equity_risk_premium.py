@@ -1,7 +1,9 @@
 import pandas as pd
+import os
+import datetime
 
 # Load the intermediate monthly data
-monthly = pd.read_csv('monthly_intermediate.csv')
+monthly = pd.read_csv(os.path.join('..', 'output', 'data', 'monthly_intermediate.csv'))
 monthly['Date'] = pd.to_datetime(monthly['Date'])
 
 # Get base values for 2015-05-01
@@ -19,9 +21,12 @@ monthly['Infra_Relative_Equity_Risk_Premium'] = monthly['Infra_Implied_Equity_Ri
 monthly['Renew_Relative_Equity_Risk_Premium'] = monthly['Renew_Implied_Equity_Risk_Premium'] / base_renew[0]
 
 # Save to CSV
+os.makedirs('output/data', exist_ok=True)
+timestamp = datetime.datetime.now().strftime('%Y%m%d_%H%M%S')
+relative_csv_path = os.path.join('..', 'output', 'data', f'relative_equity_risk_premium_{timestamp}.csv')
 relative_cols = ['Date', 'Infra_Relative_Equity_Risk_Premium', 'Renew_Relative_Equity_Risk_Premium']
-monthly[relative_cols].to_csv('relative_equity_risk_premium.csv', index=False)
-print('Saved relative equity risk premium for infra and renewables to relative_equity_risk_premium.csv')
+monthly[relative_cols].to_csv(relative_csv_path, index=False)
+print(f'Saved relative equity risk premium for infra and renewables to {relative_csv_path}')
 
 # Print the relative change for each month
 for _, row in monthly.iterrows():

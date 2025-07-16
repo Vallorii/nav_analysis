@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import os
 from stargazer.stargazer import Stargazer
+import datetime
 
 # Load the combined dataset
 print("Loading the combined dataset...")
@@ -54,15 +55,16 @@ stargazer.rename_covariates({
 })
 
 # Save the table in different formats
-output_dir = r"C:\Users\CB - Vallorii\Vallorii\Vallorii - Vallorii Team\20_Knowledge_Data\40_MarketData\NAV"
-os.makedirs(output_dir, exist_ok=True)
+os.makedirs(os.path.join('..', 'output', 'data'), exist_ok=True)
+os.makedirs(os.path.join('..', 'output', 'charts'), exist_ok=True)
 
 # Save as HTML
-with open(os.path.join(output_dir, 'regression_table.html'), 'w') as f:
+timestamp = datetime.datetime.now().strftime('%Y%m%d_%H%M%S')
+with open(os.path.join('..', 'output', 'data', f'regression_table_{timestamp}.html'), 'w') as f:
     f.write(stargazer.render_html())
 
 # Save as LaTeX
-with open(os.path.join(output_dir, 'regression_table.tex'), 'w') as f:
+with open(os.path.join('..', 'output', 'data', f'regression_table_{timestamp}.tex'), 'w') as f:
     f.write(stargazer.render_latex())
 
 # Print a message to check the output files
@@ -100,10 +102,11 @@ plt.ylabel('Predicted Values')
 plt.title('Actual vs Predicted')
 
 plt.tight_layout()
-plt.savefig(os.path.join(output_dir, 'regression_diagnostics.png'), dpi=300, bbox_inches='tight')
+timestamp = datetime.datetime.now().strftime('%Y%m%d_%H%M%S')
+plt.savefig(os.path.join('..', 'output', 'charts', f'regression_diagnostics_{timestamp}.png'), dpi=300, bbox_inches='tight')
 plt.show()
 
 print("\nOutput files have been saved:")
-print(f"- HTML table: {os.path.join(output_dir, 'regression_table.html')}")
-print(f"- LaTeX table: {os.path.join(output_dir, 'regression_table.tex')}")
-print(f"- Diagnostic plots: {os.path.join(output_dir, 'regression_diagnostics.png')}")
+print(f"- HTML table: output/data/regression_table.html")
+print(f"- LaTeX table: output/data/regression_table.tex")
+print(f"- Diagnostic plots: output/charts/regression_diagnostics.png")

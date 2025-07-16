@@ -2,6 +2,8 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
+import os
+import datetime
 
 # --- File paths (update if needed) ---
 nav_path = r"C:\Users\CB - Vallorii\Vallorii\Vallorii - Vallorii Team\20_Knowledge_Data\40_MarketData\NAV\20250529_235935_COMBINED_ALL_FUNDS.csv"
@@ -29,8 +31,9 @@ nav_df = nav_df[
     (~nav_df['Fund Name'].isin(FUNDS_TO_EXCLUDE))
 ].copy()
 # Save filtered nav_df as CSV
-nav_df.to_csv('nav_df_B.csv', index=False)
-print('Saved filtered nav_df as nav_df_B.csv')
+timestamp = datetime.datetime.now().strftime('%Y%m%d_%H%M%S')
+nav_df.to_csv(os.path.join('..', 'output', 'data', f'nav_df_B_{timestamp}.csv'), index=False)
+print('Saved filtered nav_df as output/data/nav_df_B.csv')
 
 # --- Calculate NAV Discount Percentage ---
 nav_df['Nav Discount'] = (nav_df['Price'] / nav_df['NAV']) - 1
@@ -87,12 +90,14 @@ mask = (monthly['Date'] >= '2015-05-01') & (monthly['Date'] <= '2025-05-01')
 monthly = monthly.loc[mask].copy()
 
 # --- Save intermediate monthly DataFrame to CSV for further analysis ---
-monthly.to_csv('monthly_intermediate.csv', index=False)
-print('Saved intermediate monthly DataFrame as monthly_intermediate.csv')
+timestamp = datetime.datetime.now().strftime('%Y%m%d_%H%M%S')
+monthly.to_csv(os.path.join('..', 'output', 'data', f'monthly_intermediate_{timestamp}.csv'), index=False)
+print('Saved intermediate monthly DataFrame as output/data/monthly_intermediate.csv')
 
 # --- Save to CSV ---
-monthly.to_csv('implied_equity_risk_premium_B.csv', index=False)
-print('Saved implied equity risk premium table as implied_equity_risk_premium_B.csv')
+timestamp = datetime.datetime.now().strftime('%Y%m%d_%H%M%S')
+monthly.to_csv(os.path.join('..', 'output', 'data', f'implied_equity_risk_premium_B_{timestamp}.csv'), index=False)
+print('Saved implied equity risk premium table as output/data/implied_equity_risk_premium_B.csv')
 
 # --- Plot line plot for all funds implied equity risk premium ---
 plt.figure(figsize=(12,6))
@@ -113,9 +118,10 @@ ax.xaxis.set_major_formatter(mdates.DateFormatter('%Y'))
 # Set y-axis to start at 0.00
 ax.set_ylim(bottom=0.00)
 plt.tight_layout()
-plt.savefig('implied_equity_risk_premium_B.png', dpi=300)
+timestamp = datetime.datetime.now().strftime('%Y%m%d_%H%M%S')
+plt.savefig(os.path.join('..', 'output', 'charts', f'implied_equity_risk_premium_B_{timestamp}.png'), dpi=300)
 plt.close()
-print('Saved implied equity risk premium plot as implied_equity_risk_premium_B.png')
+print('Saved implied equity risk premium plot as output/charts/implied_equity_risk_premium_B.png')
 
 # --- Plot relative change since 01/05/2015 ---
 base_value = monthly.loc[monthly['Date'] == pd.Timestamp('2015-05-01'), 'All_Funds_Implied_Equity_Risk_Premium'].values
@@ -133,9 +139,10 @@ if len(base_value) > 0 and base_value[0] != 0:
     ax.set_xticks(years)
     ax.xaxis.set_major_formatter(mdates.DateFormatter('%Y'))
     plt.tight_layout()
-    plt.savefig('implied_equity_risk_premium_relative_B.png', dpi=300)
+    timestamp = datetime.datetime.now().strftime('%Y%m%d_%H%M%S')
+    plt.savefig(os.path.join('..', 'output', 'charts', f'implied_equity_risk_premium_relative_B_{timestamp}.png'), dpi=300)
     plt.close()
-    print('Saved relative implied equity risk premium plot as implied_equity_risk_premium_relative_B.png')
+    print('Saved relative implied equity risk premium plot as output/charts/implied_equity_risk_premium_relative_B.png')
 
 # --- Load market cap data ---
 market_cap_path = r"C:\Users\CB - Vallorii\Vallorii\Vallorii - Vallorii Team\20_Knowledge_Data\40_MarketData\Infra fund data\Uk_InfraFund_marketcap.xlsx"
@@ -190,7 +197,8 @@ def get_closest_market_cap(row):
 nav_df['Market Cap'] = nav_df.apply(get_closest_market_cap, axis=1)
 
 # Save nav_df with market cap as CSV
-nav_df.to_csv('nav_df_with_marketcap.csv', index=False)
+timestamp = datetime.datetime.now().strftime('%Y%m%d_%H%M%S')
+nav_df.to_csv(os.path.join('..', f'nav_df_with_marketcap_{timestamp}.csv'), index=False)
 print('Saved nav_df with market cap as nav_df_with_marketcap.csv')
 
 # --- Market cap weighted NAV discount for each month and group ---
@@ -234,7 +242,8 @@ ax.set_xticks(years)
 ax.xaxis.set_major_formatter(mdates.DateFormatter('%Y'))
 ax.set_ylim(bottom=0.00)
 plt.tight_layout()
-plt.savefig('implied_equity_risk_premium_weighted_B.png', dpi=300)
+timestamp = datetime.datetime.now().strftime('%Y%m%d_%H%M%S')
+plt.savefig(os.path.join('..', f'implied_equity_risk_premium_weighted_B_{timestamp}.png'), dpi=300)
 plt.close()
 print('Saved implied equity risk premium plot (market cap weighted) as implied_equity_risk_premium_weighted_B.png')
 
@@ -254,7 +263,8 @@ if len(base_value_w) > 0 and base_value_w[0] != 0:
     ax.set_xticks(years)
     ax.xaxis.set_major_formatter(mdates.DateFormatter('%Y'))
     plt.tight_layout()
-    plt.savefig('implied_equity_risk_premium_weighted_relative_B.png', dpi=300)
+    timestamp = datetime.datetime.now().strftime('%Y%m%d_%H%M%S')
+    plt.savefig(os.path.join('..', f'implied_equity_risk_premium_weighted_relative_B_{timestamp}.png'), dpi=300)
     plt.close()
     print('Saved relative implied equity risk premium plot (market cap weighted) as implied_equity_risk_premium_weighted_relative_B.png')
 
@@ -274,7 +284,8 @@ ax.xaxis.set_major_formatter(mdates.DateFormatter('%Y'))
 ax.set_ylim(bottom=0.00)
 plt.legend()
 plt.tight_layout()
-plt.savefig('implied_equity_risk_premium_by_category_B.png', dpi=300)
+timestamp = datetime.datetime.now().strftime('%Y%m%d_%H%M%S')
+plt.savefig(os.path.join('..', f'implied_equity_risk_premium_by_category_B_{timestamp}.png'), dpi=300)
 plt.close()
 print('Saved implied equity risk premium by category plot as implied_equity_risk_premium_by_category_B.png')
 
@@ -298,7 +309,8 @@ if len(base_infra) > 0 and base_infra[0] != 0 and len(base_renew) > 0 and base_r
     ax.xaxis.set_major_formatter(mdates.DateFormatter('%Y'))
     plt.legend()
     plt.tight_layout()
-    plt.savefig('implied_equity_risk_premium_relative_by_category_B.png', dpi=300)
+    timestamp = datetime.datetime.now().strftime('%Y%m%d_%H%M%S')
+    plt.savefig(os.path.join('..', f'implied_equity_risk_premium_relative_by_category_B_{timestamp}.png'), dpi=300)
     plt.close()
     print('Saved relative implied equity risk premium by category plot as implied_equity_risk_premium_relative_by_category_B.png')
 
@@ -318,7 +330,8 @@ ax.xaxis.set_major_formatter(mdates.DateFormatter('%Y'))
 ax.set_ylim(bottom=0.00)
 plt.legend()
 plt.tight_layout()
-plt.savefig('implied_equity_risk_premium_weighted_by_category_B.png', dpi=300)
+timestamp = datetime.datetime.now().strftime('%Y%m%d_%H%M%S')
+plt.savefig(os.path.join('..', f'implied_equity_risk_premium_weighted_by_category_B_{timestamp}.png'), dpi=300)
 plt.close()
 print('Saved implied equity risk premium by category (weighted) plot as implied_equity_risk_premium_weighted_by_category_B.png')
 
@@ -342,9 +355,10 @@ if len(base_infra_w) > 0 and base_infra_w[0] != 0 and len(base_renew_w) > 0 and 
     ax.xaxis.set_major_formatter(mdates.DateFormatter('%Y'))
     plt.legend()
     plt.tight_layout()
-    plt.savefig('implied_equity_risk_premium_weighted_relative_by_category_B.png', dpi=300)
+    timestamp = datetime.datetime.now().strftime('%Y%m%d_%H%M%S')
+    plt.savefig(os.path.join('..', 'output', 'charts', f'implied_equity_risk_premium_weighted_relative_by_category_B_{timestamp}.png'), dpi=300)
     plt.close()
-    print('Saved relative implied equity risk premium by category (weighted) plot as implied_equity_risk_premium_weighted_relative_by_category_B.png')
+    print('Saved relative implied equity risk premium by category (weighted) plot as output/charts/implied_equity_risk_premium_weighted_relative_by_category_B.png')
 
 # --- Save market cap weighted results to CSV ---
 weighted_cols = [
@@ -362,9 +376,10 @@ weighted_cols = [
     'risk_free_rate'
 ]
 weighted_df = monthly[weighted_cols].copy()
-weighted_df.to_csv('implied_equity_risk_premium_weighted_B.csv', index=False)
-print('Saved market cap weighted implied equity risk premium table as implied_equity_risk_premium_weighted_B.csv')
+timestamp = datetime.datetime.now().strftime('%Y%m%d_%H%M%S')
+weighted_df.to_csv(os.path.join('..', 'output', 'data', f'implied_equity_risk_premium_weighted_B_{timestamp}.csv'), index=False)
+print('Saved market cap weighted implied equity risk premium table as output/data/implied_equity_risk_premium_weighted_B.csv')
 
 # --- Save full monthly DataFrame to CSV (including market cap weighted columns) ---
-monthly.to_csv('implied_equity_risk_premium_full_B.csv', index=False)
-print('Saved full implied equity risk premium table as implied_equity_risk_premium_full_B.csv') 
+monthly.to_csv(os.path.join('..', 'output', 'data', f'implied_equity_risk_premium_full_B_{timestamp}.csv'), index=False)
+print('Saved full implied equity risk premium table as output/data/implied_equity_risk_premium_full_B.csv') 

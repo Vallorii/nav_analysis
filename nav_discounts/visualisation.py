@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 import seaborn as sns
 import matplotlib.pyplot as plt
+import os
 
 def set_viz_style():
     """Set the visualization style for consistent plotting"""
@@ -110,7 +111,8 @@ def create_market_cap_weighted_infra_renewables_plot(df):
         ax.set_xlim(min_date, max_date)
     
     # Save the plot
-    output_path = "Market_Cap_Weighted_NAV_Premium_Discount_Infra_vs_Renewables-final.png"
+    os.makedirs(os.path.join('output', 'charts'), exist_ok=True)
+    output_path = os.path.join('output', 'charts', "Market_Cap_Weighted_NAV_Premium_Discount_Infra_vs_Renewables-final.png")
     plt.savefig(output_path, dpi=300, bbox_inches='tight')
     plt.close()
     print(f"Plot saved as: {output_path}")

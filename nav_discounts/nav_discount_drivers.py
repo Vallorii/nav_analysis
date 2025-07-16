@@ -81,17 +81,19 @@ combined_df = combined_df.merge(monthly_uncertainty, on='Month', how='inner')
 combined_df['Date'] = combined_df['Month'].dt.to_timestamp()
 
 # Save the combined dataset for regression analysis
-combined_df.to_csv(r"C:\Users\CB - Vallorii\Vallorii\Vallorii - Vallorii Team\20_Knowledge_Data\40_MarketData\NAV\nav_discount_drivers_combined_monthly.csv", index=False)
+timestamp = datetime.datetime.now().strftime('%Y%m%d_%H%M%S')
+combined_df.to_csv(os.path.join('..', 'output', 'data', f'nav_discount_drivers_combined_monthly_{timestamp}.csv'), index=False)
 
 # Print and save correlation matrix
 correlation_matrix = combined_df[['nav_discount_median', '10yr_Nominal_Zero_Coupon', 'cpih', 'UK_EPU_Index']].corr()
 print("\nCorrelation Matrix:")
 print(correlation_matrix)
-correlation_matrix.to_csv(r"C:\Users\CB - Vallorii\Vallorii\Vallorii - Vallorii Team\20_Knowledge_Data\40_MarketData\NAV\nav_discount_correlations_monthly.csv")
+correlation_matrix.to_csv(os.path.join('..', 'output', 'data', f'nav_discount_correlations_monthly_{timestamp}.csv'))
 
 # Ensure the output directory exists
 output_dir = r"C:\Users\CB - Vallorii\Vallorii\Vallorii - Vallorii Team\20_Knowledge_Data\40_MarketData\NAV"
-os.makedirs(output_dir, exist_ok=True)
+os.makedirs(os.path.join('output', 'data'), exist_ok=True)
+os.makedirs(os.path.join('output', 'charts'), exist_ok=True)
 
 # Individual scatter plots and save as PNGs
 factors = [
@@ -107,7 +109,8 @@ for factor, label in factors:
     plt.ylabel('NAV Discount (%)')
     plt.title(f'NAV Discount vs {label}\nCorrelation: {corr:.3f}')
     plt.tight_layout()
-    plt.savefig(os.path.join(output_dir, f"correlation_{factor}.png"))
+    timestamp = datetime.datetime.now().strftime('%Y%m%d_%H%M%S')
+    plt.savefig(os.path.join('..', 'output', 'charts', f"correlation_{factor}_{timestamp}.png"))
     plt.show()
 
 # Correlation matrix heatmap
@@ -115,7 +118,8 @@ plt.figure(figsize=(8, 6))
 sns.heatmap(correlation_matrix, annot=True, cmap='coolwarm', fmt='.2f')
 plt.title('Correlation Matrix Heatmap')
 plt.tight_layout()
-plt.savefig(os.path.join(output_dir, "correlation_heatmap.png"))
+timestamp = datetime.datetime.now().strftime('%Y%m%d_%H%M%S')
+plt.savefig(os.path.join('..', 'output', 'charts', f"correlation_heatmap_{timestamp}.png"))
 plt.show()
 
 # Time series plot of NAV Discount (keep for context)
@@ -130,7 +134,8 @@ plt.ylabel('NAV Discount (%)')
 plt.title('Monthly NAV Discount Over Time')
 plt.legend()
 plt.tight_layout()
-plt.savefig(os.path.join(output_dir, "nav_discount_timeseries.png"))
+timestamp = datetime.datetime.now().strftime('%Y%m%d_%H%M%S')
+plt.savefig(os.path.join('..', 'output', 'charts', f"nav_discount_timeseries_{timestamp}.png"))
 plt.show()
 
 
